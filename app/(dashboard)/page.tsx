@@ -3,6 +3,7 @@ import { createClient } from "@/utils/supabase/server";
 import { InfoIcon } from "lucide-react";
 import { redirect } from "next/navigation";
 import DashboardLayout from "./Components/dashboard-layout";
+import SignIn from "../(auth-pages)/components/sign-in";
 
 export default async function Dashboard() {
   const supabase = await createClient();

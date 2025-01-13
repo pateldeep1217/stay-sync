@@ -1,15 +1,52 @@
+"use client";
 import * as React from "react";
-import { Bell, ChevronDown, Menu, Search } from "lucide-react";
+import { Bell, ChevronDown, Menu, Search, LogOut } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import Logo from "./Logo";
+import { createClient } from "@/utils/supabase/client";
+
+import Link from "next/link";
+import { signOutAction } from "@/app/(auth-pages)/actions";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
 }
 
+interface UserProfile {
+  id: string;
+  username: string;
+  avatar_url: string;
+}
+
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
+  const [userProfile, setUserProfile] = React.useState<UserProfile | null>(
+    null
+  );
+  const supabase = createClient();
+
+  const fetchUserProfile = async () => {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (user) {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id, username, avatar_url")
+        .eq("id", user.id)
+        .single();
+
+      console.log("Fetch user profile response:", data, error); // Add this line
+
+      if (error) {
+        console.error("Error fetching user profile:", error);
+      } else {
+        setUserProfile(data);
+      }
+    }
+  };
+
   return (
     <>
       <div className="relative isolate flex min-h-svh w-full flex-col bg-white lg:bg-zinc-100 dark:bg-zinc-900 dark:lg:bg-zinc-950">
@@ -74,12 +111,34 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                   <Bell className="h-5 w-5" />
                   <span className="sr-only">Notifications</span>
                 </Button>
-                <Button variant="ghost" size="icon" className="h-10 w-10">
-                  <Avatar>
-                    <AvatarImage alt="User" />
-                    <AvatarFallback>U</AvatarFallback>
-                  </Avatar>
-                </Button>
+                {userProfile ? (
+                  <div className="flex items-center gap-2">
+                    <Avatar>
+                      <AvatarImage
+                        src={userProfile.avatar_url}
+                        alt={userProfile.username}
+                      />
+                      <AvatarFallback>
+                        {userProfile.username.charAt(0)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <form action={signOutAction}>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        type="submit"
+                        className="h-10 w-10"
+                      >
+                        <LogOut className="h-5 w-5" />
+                        <span className="sr-only">Sign out</span>
+                      </Button>
+                    </form>
+                  </div>
+                ) : (
+                  <Link href="/sign-in">
+                    <Button variant="ghost">Sign In</Button>
+                  </Link>
+                )}
               </div>
             </nav>
           </div>
