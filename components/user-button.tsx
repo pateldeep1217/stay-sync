@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { User } from "@supabase/supabase-js";
@@ -23,7 +23,7 @@ export function UserButton() {
   const supabase = createClient();
 
   // Fetch user data on component mount
-  useState(() => {
+  useEffect(() => {
     const fetchUser = async () => {
       const {
         data: { user },
